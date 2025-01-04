@@ -1,0 +1,20 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: CiaoChat
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: user
+    password: 123
+    url: jdbc:postgresql://localhost:5432/ciao
+
+  liquibase:
+    change-log: classpath:db/changelog/db-changelog-master.yaml
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

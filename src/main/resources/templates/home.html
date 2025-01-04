@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .main-page {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            position: absolute;
+            top: 20px; /* Расположение от верхней части страницы */
+            left: 20px; /* Расположение от левой части страницы */
+        }
+        .logo {
+            margin-bottom: 1.5rem;
+        }
+        .logo h1 {
+            font-size: 2rem;
+            color: #007bff; /* Цвет логотипа */
+            font-family: 'Arial', sans-serif; /* Шрифт логотипа */
+            margin: 0;
+        }
+        .main-page h2 {
+            margin-bottom: 1.5rem;
+        }
+        .main-page button {
+            width: 100%;
+        }
+        .tooltip-container {
+            display: inline-block;
+            position: relative;
+        }
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: -5px;
+            left: 105%;
+            background-color: #343a40;
+            color: #ffffff;
+            padding: 5px;
+            border-radius: 5px;
+            white-space: nowrap;
+            z-index: 1;
+        }
+        .tooltip-container:hover .tooltip {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-page">
+    <div class="logo">
+        <h1>CiaoChat</h1>
+    </div>
+    <h2>Начать общение</h2>
+    <form action="/start_chat" method="post">
+        <div class="form-group">
+            <input type="text" id="userId" name="userId" class="form-control" placeholder="Введите ID пользователя" required>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Начать общение</button>
+            <div class="tooltip-container">
+                <span class="tooltip">Персональный id может быть найден в строке браузера и профиле.</span>
+                <span class="ml-2" style="cursor: pointer;">?</span>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
