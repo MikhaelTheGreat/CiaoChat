@@ -7,11 +7,12 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
-
+    private final AuthenticationSuccessHandler customSuccessHandler;
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
@@ -24,7 +25,7 @@ public class SecurityConfig {
         http.formLogin(c -> c.loginPage("/login")
                 .loginProcessingUrl("/perform_login")
                 .failureUrl("/login?error")
-                .defaultSuccessUrl("/home"));
+                .successHandler(customSuccessHandler));
 
         http.headers(headers -> headers
                 .contentTypeOptions(Customizer.withDefaults()));
