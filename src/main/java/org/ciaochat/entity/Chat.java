@@ -23,7 +23,7 @@ public class Chat {
     @Column(length = 50, nullable = false)
     private String name;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     @JoinTable(
             name = "chat_user",
             joinColumns = @JoinColumn(name = "chat_id"),
@@ -31,6 +31,6 @@ public class Chat {
     )
     private List<User> users;
 
-    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL)
     private List<Message> messages;
 }

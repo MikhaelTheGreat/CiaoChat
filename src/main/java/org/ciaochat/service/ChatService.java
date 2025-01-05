@@ -51,6 +51,12 @@ public class ChatService {
     }
 
     @Transactional
+    public void deleteChat(Long chatId) {
+        chatRepository.deleteChatUserByChatId(chatId);
+        chatRepository.deleteById(chatId);
+    }
+
+    @Transactional
     public ChatDto createChat(ChatDto chatDto) {
         Chat chat = new Chat();
         chat.setName(chatDto.getName());

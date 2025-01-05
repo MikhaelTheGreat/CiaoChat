@@ -5,12 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.ciaochat.dto.ChatDto;
 import org.ciaochat.dto.MessageDto;
 import org.ciaochat.service.ChatService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,12 +24,6 @@ public class ChatController {
         chatService.sendMessage(messageDto);
     }
 
-//    @GetMapping("/all_chats")
-//    public String getAllChats(Model model, HttpSession session) {
-//
-//        return "home";
-//    }
-
     @GetMapping("/home")
     public String home(Model model, HttpSession httpSession) {
         Long userId = (Long) httpSession.getAttribute("userId");
@@ -43,9 +36,17 @@ public class ChatController {
         return "home";
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
     @PostMapping("/create_chat")
-    public String createChat(@RequestBody ChatDto chatDto) {
-        chatService.createChat(chatDto);
-        return "redirect:/chat/home";
+    public ChatDto createChat(@RequestBody ChatDto chatDto) {
+        return chatService.createChat(chatDto);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteChat(@PathVariable Long id) {
+        chatService.deleteChat(id);
+
+        return ResponseEntity.ok().build();
     }
 }
