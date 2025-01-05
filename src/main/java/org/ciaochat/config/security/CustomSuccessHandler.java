@@ -21,6 +21,6 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
         request.getSession().setAttribute("userId", userId);
         request.getSession().setAttribute("username", username);
 
-        response.sendRedirect("/home");
+        response.sendRedirect("/chat/home");
     }
 }

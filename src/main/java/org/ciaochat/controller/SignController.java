@@ -44,11 +44,4 @@ public class SignController {
 
         return ResponseEntity.ok().build();
     }
-
-    @GetMapping("/home")
-    public String home(Model model, HttpSession httpSession) {
-        model.addAttribute("userId", httpSession.getAttribute("userId"));
-        model.addAttribute("username", httpSession.getAttribute("username"));
-        return "home";
-    }
 }

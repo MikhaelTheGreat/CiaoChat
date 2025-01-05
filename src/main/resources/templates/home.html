@@ -8,18 +8,14 @@
     <style>
         body {
             background-color: #f8f9fa;
+            display: flex;
+            justify-content: space-between; /* Разделение пространства между элементами */
+            height: 100vh; /* Высота на весь экран */
+            padding: 20px; /* Отступы от краев */
         }
         .greeting-container {
             text-align: center; /* Центрирование текста */
             margin-bottom: 2rem; /* Отступ снизу для разделения с основной частью */
-        }
-        .greeting {
-            font-size: 2rem; /* Размер шрифта для приветствия */
-            color: #007bff; /* Цвет текста для приветствия */
-        }
-        .user-id {
-            font-size: 1rem; /* Размер шрифта для ID */
-            color: #6c757d; /* Цвет текста для ID */
         }
         .main-page {
             background-color: #ffffff;
@@ -27,9 +23,7 @@
             border-radius: 0.5rem;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             width: 300px;
-            position: absolute;
-            top: 20px; /* Расположение от верхней части страницы */
-            left: 20px; /* Расположение от левой части страницы */
+            text-align: center; /* Центрирование текста внутри блока */
         }
         .logout-button {
             position: absolute;
@@ -39,33 +33,21 @@
         .main-page button {
             width: 100%;
         }
-        .tooltip-container {
-            display: inline-block;
-            position: relative;
+        .chat-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Центрирование списка чатов */
+            justify-content: center; /* Центрирование по вертикали */
+            flex-grow: 1; /* Позволяет этому блоку занимать оставшееся пространство */
         }
-        .tooltip {
-            display: none;
-            position: absolute;
-            top: -5px;
-            left: 105%;
-            background-color: #343a40;
-            color: #ffffff;
-            padding: 5px;
-            border-radius: 5px;
-            white-space: nowrap;
-            z-index: 1;
-        }
-        .tooltip-container:hover .tooltip {
-            display: block;
+        .no-chats {
+            font-size: 1.5rem;
+            color: #dc3545; /* Цвет текста для сообщения об отсутствии чатов */
+            margin-top: 2rem;
         }
     </style>
 </head>
 <body>
-
-<div class="greeting-container">
-    <div class="greeting">Здравствуйте, <span th:text="${username}"></span>.</div>
-    <div class="user-id">Ваш id: <span th:text="${userId}"></span></div>
-</div>
 
 <div class="logout-button">
     <form action="/logout" method="post">
@@ -80,7 +62,12 @@
         <h1>CiaoChat</h1>
     </div>
     <h2>Начать общение</h2>
-    <form action="/start_chat" method="post">
+    <form id="chatForm">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" id= "csrfToken"/>
+
+        <div class="form-group">
+            <input type="text" id="chatName" name="chatName" class="form-control" placeholder="Введите имя будущего чата" required>
+        </div>
         <div class="form-group">
             <input type="text" id="userId" name="userId" class="form-control" placeholder="Введите ID пользователя" required>
         </div>
@@ -88,10 +75,53 @@
             <button type="submit" class="btn btn-primary">Начать общение</button>
         </div>
     </form>
+    <div class="greeting-container">
+        <div class="greeting">Здравствуйте, <span th:text="${username}"></span>.</div>
+        <div class="user-id">Ваш id: <span th:text="${userId}"></span></div>
+    </div>
+</div>
+
+<div class="chat-list">
+    <div th:if="${#lists.isEmpty(chats)}" class="no-chats">
+        Пока что депрессия
+    </div>
+    <ul th:if="${!#lists.isEmpty(chats)}" class="list-group">
+        <li th:each="chat : ${chats}" class="list-group-item">
+            <a th:href="@{/chat/{id}(id=${chat.id})}" th:text="${chat.name}"></a>
+        </li>
+    </ul>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    document.getElementById('chatForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Предотвращаем стандартное поведение формы
+
+        const chatName = document.getElementById('chatName').value;
+        const userIdFromInput = document.getElementById('userId').value;
+        const userIdFromModel = [[${userId}]];
+
+        const chatDto = {
+            id: null, // Или любое другое значение, если нужно
+            name: chatName, // Название чата, можно изменить по необходимости
+            usersId: [userIdFromModel, userIdFromInput]
+        };
+
+        const csrfToken = document.getElementById('csrfToken').value;
+
+        fetch('/chat/create_chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken // Добавляем CSRF-токен в заголовок
+            },
+            body: JSON.stringify(chatDto)
+        })
+    });
+</script>
+
 </body>
 </html>

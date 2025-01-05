@@ -38,7 +38,7 @@ public class User implements IdUserDetails {
     private Set<Message> messages;
 
     @ManyToMany(mappedBy = "users")
-    private Set<Chat> chats;
+    private List<Chat> chats;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
