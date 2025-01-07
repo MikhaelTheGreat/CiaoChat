@@ -85,10 +85,10 @@
 </div>
 
 <div class="chat-list">
-    <div th:if="${#lists.isEmpty(chats)}" class="no-chats">
+    <div class="no-chats" th:if="${#lists.isEmpty(chats)}">
         Пока что депрессия
     </div>
-    <ul th:if="${!#lists.isEmpty(chats)}" class="list-group">
+    <ul class="list-group" th:if="${!#lists.isEmpty(chats)}">
         <li th:each="chat : ${chats}" class="list-group-item d-flex justify-content-between align-items-center">
             <a th:href="@{/chat/{id}(id=${chat.id})}" th:text="${chat.name}"></a>
             <span class="delete-button" th:data-id="${chat.id}" th:text="'Удалить'" onclick="deleteChat(this)"></span>
@@ -97,86 +97,109 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
 <script>
+    let stompClient = null;
+
+    function connect() {
+        const socket = new SockJS('/websocket');
+        stompClient = Stomp.over(socket);
+
+        const csrfToken = document.getElementById('csrfToken').value;
+        const userId = [[${userId}]];
+
+        stompClient.connect({ 'X-CSRF-TOKEN': csrfToken }, function (frame) {
+            console.log('Подключено: ' + frame);
+
+            stompClient.subscribe('/client/' + userId + '/create_chat', function (message) {
+                const chatDto = JSON.parse(message.body);
+                addChatToList(chatDto);
+            });
+
+            stompClient.subscribe('/client/' + userId + '/delete_chat', function (message) {
+                const chatId = JSON.parse(message.body);
+                removeChatFromList(chatId);
+            });
+        }, function (error) {
+            console.error('Ошибка соединения: ', error);
+        });
+    }
+
     document.getElementById('chatForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Предотвращаем стандартное поведение формы
+        event.preventDefault();
 
         const chatName = document.getElementById('chatName').value;
-        const userIdFromInput = document.getElementById('userId').value;
+        const userIdFromInput = parseInt(document.getElementById('userId').value, 10);
         const userIdFromModel = [[${userId}]];
 
         const chatDto = {
-            id: null, // Или любое другое значение, если нужно
+            id: null,
             name: chatName,
             usersId: [userIdFromModel, userIdFromInput]
         };
 
-        const csrfToken = document.getElementById('csrfToken').value;
+        stompClient.send("/server/create_chat", {}, JSON.stringify(chatDto));
 
-        fetch('/chat/create_chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: JSON.stringify(chatDto)
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.json(); // Предполагаем, что сервер возвращает созданный объект чата
-                } else {
-                    throw new Error('Ошибка при создании чата');
-                }
-            })
-            .then(chat => {
-                // Создаем новый элемент списка для нового чата
-                const chatList = document.querySelector('.chat-list ul');
-                const newChatItem = document.createElement('li');
-                newChatItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-                newChatItem.innerHTML = `
-                <a href="/chat/${chat.id}">${chat.name}</a>
-                <span class="delete-button" data-id="${chat.id}" onclick="deleteChat(this)">Удалить</span>
-            `;
-                chatList.appendChild(newChatItem);
-
-                // Очищаем поля ввода
-                document.getElementById('chatName').value = '';
-                document.getElementById('userId').value = '';
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Произошла ошибка при создании чата.');
-            });
+        document.getElementById('chatName').value = '';
+        document.getElementById('userId').value = '';
     });
+
+    function addChatToList(chatDto) {
+        const chatListContainer = document.querySelector('.chat-list');
+        let chatList = chatListContainer.querySelector('.list-group');
+        const noChatsMessage = chatListContainer.querySelector('.no-chats');
+
+        if (!chatList) {
+            chatList = document.createElement('ul');
+            chatList.className = 'list-group';
+            chatListContainer.appendChild(chatList);
+        }
+
+        if (noChatsMessage) {
+            noChatsMessage.remove();
+        }
+
+        const listItem = document.createElement('li');
+        listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+        listItem.innerHTML = `
+            <a href="/chat/${chatDto.id}">${chatDto.name}</a>
+            <span class="delete-button" data-id="${chatDto.id}" onclick="deleteChat(this)">Удалить</span>
+        `;
+        chatList.appendChild(listItem);
+    }
+
+    function removeChatFromList(chatId) {
+        const chatList = document.querySelector('.chat-list .list-group');
+        const listItem = Array.from(chatList.children).find(item => item.querySelector('.delete-button').getAttribute('data-id') === chatId.toString());
+
+        if (listItem) {
+            listItem.remove();
+        }
+
+        if (chatList.children.length === 0) {
+            const noChatsMessage = document.createElement('div');
+            noChatsMessage.className = 'no-chats';
+            noChatsMessage.textContent = 'Пока что депрессия';
+            chatList.parentElement.appendChild(noChatsMessage);
+        }
+    }
 
     function deleteChat(element) {
         const chatId = element.getAttribute('data-id');
-        const csrfToken = document.getElementById('csrfToken').value;
 
-        fetch(`/chat/${chatId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            }
-        })
-            .then(response => {
-                if (response.ok) {
-                    const listItem = element.closest('li'); // Получаем родительский элемент <li>
-                    listItem.remove(); // Удаляем элемент из списка
-                } else {
-                    console.error('Ошибка при удалении чата');
-                    alert('Не удалось удалить чат. Пожалуйста, попробуйте еще раз.');
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Произошла ошибка при удалении чата.');
-            });
+        const idDto = {
+            id: chatId
+        };
+
+        // Отправляем сообщение на сервер для удаления чата
+        stompClient.send("/server/delete_chat", {}, JSON.stringify(idDto));
     }
+
+    window.onload = function() {
+        connect();
+    };
 </script>
 
 </body>

@@ -3,13 +3,11 @@ package org.ciaochat.controller;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.ciaochat.dto.ChatDto;
-import org.ciaochat.dto.MessageDto;
 import org.ciaochat.service.ChatService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
@@ -18,11 +16,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
-
-//    @PostMapping("/send")
-//    public void sendMessage(@RequestBody MessageDto messageDto) {
-//        chatService.sendMessage(messageDto);
-//    }
 
     @GetMapping("/home")
     public String home(Model model, HttpSession httpSession) {
@@ -35,18 +28,4 @@ public class ChatController {
 
         return "home";
     }
-
-//    @ResponseStatus(HttpStatus.OK)
-//    @ResponseBody
-//    @PostMapping("/create_chat")
-//    public ChatDto createChat(@RequestBody ChatDto chatDto) {
-//        return chatService.createChat(chatDto);
-//    }
-
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<?> deleteChat(@PathVariable Long id) {
-//        chatService.deleteChat(id);
-//
-//        return ResponseEntity.ok().build();
-//    }
 }

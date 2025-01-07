@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.ciaochat.dto.ChatDto;
 import org.ciaochat.dto.IdDto;
 import org.ciaochat.dto.MessageDto;
@@ -21,11 +22,14 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Slf4j
+@Controller
 @RequiredArgsConstructor
 public class WebsocketListener {
     private final SimpMessagingTemplate messagingTemplate;
@@ -37,26 +41,13 @@ public class WebsocketListener {
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
-//    @MessageMapping("/server/{userId}/create_chat")
-//    public void createChat(@Payload String message, @DestinationVariable String userId) {
-//
-//    }
-//
-//    @MessageMapping("/server/{userId}/delete_chat")
-//    public void deleteChat(@Payload String message, @DestinationVariable String userId) {
-//
-//    }
-//
-//    @MessageMapping("/server/{userId}/send_message")
-//    public void sendMessage(@Payload String message, @DestinationVariable String userId) {
-//
-//    }
 
-    @MessageMapping("/server/create_chat")
+    @Transactional
+    @MessageMapping("/create_chat")
     public void createChat(@Payload String message) {
-        ChatDto chatDto = null;
+        ChatDto chatDto;
         try {
-            objectMapper.readValue(message, ChatDto.class);
+            chatDto = objectMapper.readValue(message, ChatDto.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -81,11 +72,13 @@ public class WebsocketListener {
         chatDto.setId(chat.getId());
 
         getChatParticipantsIds(chatDto.getId()).forEach(userId -> {
-            messagingTemplate.convertAndSend("/client/" + userId, chatDto);
+            log.info(userId.toString() + "______________________________________________________________________________");
+            messagingTemplate.convertAndSend("/client/" + userId + "/create_chat", chatDto);
         });
     }
 
-    @MessageMapping("/server/delete_chat")
+    @Transactional
+    @MessageMapping("/delete_chat")
     public void deleteChat(@Payload String message) {
         Long chatId;
         try {
@@ -94,15 +87,17 @@ public class WebsocketListener {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+        getChatParticipantsIds(chatId).forEach(userId -> {
+            log.info(userId.toString() + "______________________________________________________________________________");
+            messagingTemplate.convertAndSend("/client/" + userId + "/delete_chat", chatId);
+        });
+
         chatRepository.deleteChatUserByChatId(chatId);
         chatRepository.deleteById(chatId);
-
-        getChatParticipantsIds(chatId).forEach(userId -> {
-            messagingTemplate.convertAndSend("/client/" + userId, chatId);
-        });
     }
 
-    @MessageMapping("/server/send_message")
+    @Transactional
+    @MessageMapping("/send_message")
     public void sendMessage(@Payload String jsonMessage) {
         MessageDto messageDto;
         try {
