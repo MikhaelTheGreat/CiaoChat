@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
@@ -16,4 +18,10 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
         WHERE chat_id = :id   
     """)
     void deleteChatUserByChatId(@Param("id") Long id);
+
+    @Query(nativeQuery = true, value = """
+        SELECT user_id FROM chat_user
+        WHERE chat_id = :id
+    """)
+    List<Long> getChatParticipantsByChatId(@Param("id") Long id);
 }

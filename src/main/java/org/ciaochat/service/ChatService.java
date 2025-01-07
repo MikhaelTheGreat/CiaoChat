@@ -37,46 +37,46 @@ public class ChatService {
                 .toList();
     }
 
-    @Transactional
-    public void sendMessage(MessageDto messageDto) {
-        Message message = messageMapper.toEntity(messageDto);
-        message.setSender(entityManager.getReference(User.class, messageDto.getSenderId()));
-        message.setChat(entityManager.getReference(Chat.class, messageDto.getChatId()));
-        messageRepository.save(message);
-    }
+//    @Transactional
+//    public void sendMessage(MessageDto messageDto) {
+//        Message message = messageMapper.toEntity(messageDto);
+//        message.setSender(entityManager.getReference(User.class, messageDto.getSenderId()));
+//        message.setChat(entityManager.getReference(Chat.class, messageDto.getChatId()));
+//        messageRepository.save(message);
+//    }
 
     @Transactional
     public List<ChatDto> getUserAllChatsNames(Long userId) {
         return userService.getAllChats(userId);
     }
 
-    @Transactional
-    public void deleteChat(Long chatId) {
-        chatRepository.deleteChatUserByChatId(chatId);
-        chatRepository.deleteById(chatId);
-    }
+//    @Transactional
+//    public void deleteChat(Long chatId) {
+//        chatRepository.deleteChatUserByChatId(chatId);
+//        chatRepository.deleteById(chatId);
+//    }
 
-    @Transactional
-    public ChatDto createChat(ChatDto chatDto) {
-        Chat chat = new Chat();
-        chat.setName(chatDto.getName());
-
-        List<User> users = new ArrayList<>();
-        chatDto.getUsersId().forEach(id -> {
-            if(!userRepository.existsById(id)) {
-                throw new EntityNotFoundException();
-            }
-        });
-        chatDto.getUsersId().forEach(id -> {
-            User user = entityManager.getReference(User.class, id);
-            users.add(user);
-        });
-
-        chat.setUsers(users);
-        chat = chatRepository.save(chat);
-
-        chatDto.setId(chat.getId());
-        return chatDto;
-    }
+//    @Transactional
+//    public ChatDto createChat(ChatDto chatDto) {
+//        Chat chat = new Chat();
+//        chat.setName(chatDto.getName());
+//
+//        List<User> users = new ArrayList<>();
+//        chatDto.getUsersId().forEach(id -> {
+//            if(!userRepository.existsById(id)) {
+//                throw new EntityNotFoundException();
+//            }
+//        });
+//        chatDto.getUsersId().forEach(id -> {
+//            User user = entityManager.getReference(User.class, id);
+//            users.add(user);
+//        });
+//
+//        chat.setUsers(users);
+//        chat = chatRepository.save(chat);
+//
+//        chatDto.setId(chat.getId());
+//        return chatDto;
+//    }
 
 }
