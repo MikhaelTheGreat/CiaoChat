@@ -6,8 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.ciaochat.dto.ChatDto;
 import org.ciaochat.dto.MessageDto;
 import org.ciaochat.entity.Chat;
-import org.ciaochat.entity.Message;
-import org.ciaochat.entity.User;
+import org.ciaochat.mapper.ChatMapper;
 import org.ciaochat.mapper.MessageMapper;
 import org.ciaochat.repository.ChatRepository;
 import org.ciaochat.repository.MessageRepository;
@@ -26,15 +25,23 @@ public class ChatService {
     private final EntityManager entityManager;
     private final MessageMapper messageMapper;
     private final UserService userService;
+    private final ChatMapper chatMapper;
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public List<MessageDto> getChatMessages(Long chatId) {
         Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new EntityNotFoundException());
 
-        return chat.getMessages().stream()
+        return new ArrayList<>(chat.getMessages().stream()
                 .map(messageMapper::toDto)
-                .toList();
+                .toList());
+    }
+
+    @Transactional
+    public ChatDto getChat(long chatId) {
+        return chatRepository.findById(chatId)
+                .map(chatMapper::toDto)
+                .orElseThrow(() -> new EntityNotFoundException());
     }
 
     @Transactional

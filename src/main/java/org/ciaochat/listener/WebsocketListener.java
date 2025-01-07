@@ -71,8 +71,9 @@ public class WebsocketListener {
 
         chatDto.setId(chat.getId());
 
+        log.info(chatDto.getId() + "______________________________________________________________________________");
+
         getChatParticipantsIds(chatDto.getId()).forEach(userId -> {
-            log.info(userId.toString() + "______________________________________________________________________________");
             messagingTemplate.convertAndSend("/client/" + userId + "/create_chat", chatDto);
         });
     }
@@ -113,7 +114,7 @@ public class WebsocketListener {
 
         List<Long> chatParticipantsIds = getChatParticipantsIds(messageDto.getChatId());
         chatParticipantsIds.forEach(userIds -> {
-            messagingTemplate.convertAndSend("/client/" + userIds, messageDto);
+            messagingTemplate.convertAndSend("/client/" + userIds + "/send_message", messageDto);
         });
     }
 
