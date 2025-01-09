@@ -1,6 +1,5 @@
-package org.ciaochat.listener;
+package org.ciaochat.listener.websocket;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,12 +15,9 @@ import org.ciaochat.mapper.MessageMapper;
 import org.ciaochat.repository.ChatRepository;
 import org.ciaochat.repository.MessageRepository;
 import org.ciaochat.repository.UserRepository;
-import org.ciaochat.service.UserService;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,27 +27,19 @@ import java.util.List;
 @Slf4j
 @Controller
 @RequiredArgsConstructor
-public class WebsocketListener {
+public class ChatWebSocketListener {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
     private final EntityManager entityManager;
     private final MessageMapper messageMapper;
-    private final UserService userService;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
 
     @Transactional
     @MessageMapping("/create_chat")
-    public void createChat(@Payload String message) {
-        ChatDto chatDto;
-        try {
-            chatDto = objectMapper.readValue(message, ChatDto.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
+    public void createChat(@Payload ChatDto chatDto) {
         Chat chat = new Chat();
         chat.setName(chatDto.getName());
 
@@ -71,8 +59,6 @@ public class WebsocketListener {
 
         chatDto.setId(chat.getId());
 
-        log.info(chatDto.getId() + "______________________________________________________________________________");
-
         getChatParticipantsIds(chatDto.getId()).forEach(userId -> {
             messagingTemplate.convertAndSend("/client/" + userId + "/create_chat", chatDto);
         });
@@ -80,16 +66,9 @@ public class WebsocketListener {
 
     @Transactional
     @MessageMapping("/delete_chat")
-    public void deleteChat(@Payload String message) {
-        Long chatId;
-        try {
-            chatId = objectMapper.readValue(message, IdDto.class)
-                    .getId();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+    public void deleteChat(@Payload IdDto idDto) {
+        Long chatId = idDto.getId();
         getChatParticipantsIds(chatId).forEach(userId -> {
-            log.info(userId.toString() + "______________________________________________________________________________");
             messagingTemplate.convertAndSend("/client/" + userId + "/delete_chat", chatId);
         });
 
@@ -99,14 +78,7 @@ public class WebsocketListener {
 
     @Transactional
     @MessageMapping("/send_message")
-    public void sendMessage(@Payload String jsonMessage) {
-        MessageDto messageDto;
-        try {
-            messageDto = objectMapper.readValue(jsonMessage, MessageDto.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
+    public void sendMessage(@Payload MessageDto messageDto) {
         Message message = messageMapper.toEntity(messageDto);
         message.setSender(entityManager.getReference(User.class, messageDto.getSenderId()));
         message.setChat(entityManager.getReference(Chat.class, messageDto.getChatId()));

@@ -107,7 +107,7 @@
         const socket = new SockJS('/websocket');
         stompClient = Stomp.over(socket);
 
-        const csrfToken = document.getElementById('csrfToken').value;
+        const csrfToken = document.getElementById('csrfToken').value; // в контексе имеетя id и имя
         const userId = [[${userId}]];
 
         stompClient.connect({ 'X-CSRF-TOKEN': csrfToken }, function (frame) {
